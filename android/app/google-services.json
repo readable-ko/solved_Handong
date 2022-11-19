@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "231870076850",
+    "project_id": "solved-handong",
+    "storage_bucket": "solved-handong.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:231870076850:android:0072f9e1a2756c147876ab",
+        "android_client_info": {
+          "package_name": "com.example.solved_handong"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "231870076850-mhut750a5il7hqim52d5g646b474uht1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEhByufFfCMlVH-P-0vZB4GXYgBNFokno"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "231870076850-mhut750a5il7hqim52d5g646b474uht1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
