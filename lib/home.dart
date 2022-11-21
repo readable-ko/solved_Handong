@@ -1,7 +1,11 @@
 // App design: https://dribbble.com/shots/6459693-Creative-layout-design
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:styled_widget/styled_widget.dart';
+
+import 'main.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -13,15 +17,20 @@ class HomePage extends StatelessWidget {
         .constrained(minHeight: MediaQuery.of(context).size.height - (2 * 30))
         .scrollable();
 
-    return <Widget>[
-      const Text(
-        'User settings',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
-      ).alignment(Alignment.center).padding(bottom: 20),
-      const UserCard(),
-      const ActionsRow(),
-      Settings(),
-    ].toColumn().parent(page);
+    return Consumer<ApplicationState>(
+      builder: (context, appState, child) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Main Page'),
+        ),
+        body: Column(
+          children: const [
+            UserCard(),
+            ActionsRow(),
+            Settings(),
+          ],
+        ).parent(page),
+      ),
+    );
   }
 }
 
@@ -29,49 +38,50 @@ class UserCard extends StatelessWidget {
   const UserCard({super.key});
 
   Widget _buildUserRow() {
-    return <Widget>[
-      const Icon(Icons.account_circle)
-          .decorated(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-      )
-          .constrained(height: 50, width: 50)
-          .padding(right: 10),
-      <Widget>[
-        const Text(
-          'Rein Gundersen Bentdal',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ).padding(bottom: 5),
-        Text(
-          'Creative builder',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
-            fontSize: 12,
-          ),
-        ),
-      ].toColumn(crossAxisAlignment: CrossAxisAlignment.start),
-    ].toRow();
+    return Consumer<ApplicationState>(
+        builder: (context, appState, child) => <Widget>[
+              const Icon(Icons.account_circle)
+                  .decorated(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                  )
+                  .constrained(height: 50, width: 50)
+                  .padding(right: 10),
+              <Widget>[
+                Text(
+                  '${(appState.loggedIn) ? FirebaseAuth.instance.currentUser!.displayName : "Anonymous"}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ).padding(bottom: 5),
+                Text(
+                  '${(appState.loggedIn) ? FirebaseAuth.instance.currentUser!.email : "sample@handong.edu"}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 12,
+                  ),
+                ),
+              ].toColumn(crossAxisAlignment: CrossAxisAlignment.start),
+            ].toRow());
   }
 
   Widget _buildUserStats() {
     return <Widget>[
-      _buildUserStatsItem('846', 'Collect'),
-      _buildUserStatsItem('51', 'Attention'),
-      _buildUserStatsItem('267', 'Track'),
-      _buildUserStatsItem('39', 'Coupons'),
+      _buildUserStatsItem('846', '해결함'),
+      _buildUserStatsItem('51', '등'),
+      _buildUserStatsItem('267', '포인트'),
+      _buildUserStatsItem('39', '출석'),
     ]
         .toRow(mainAxisAlignment: MainAxisAlignment.spaceAround)
         .padding(vertical: 10);
   }
 
   Widget _buildUserStatsItem(String value, String text) => <Widget>[
-    Text(value).fontSize(20).textColor(Colors.white).padding(bottom: 5),
-    Text(text).textColor(Colors.white.withOpacity(0.6)).fontSize(12),
-  ].toColumn();
+        Text(value).fontSize(20).textColor(Colors.white).padding(bottom: 5),
+        Text(text).textColor(Colors.white.withOpacity(0.6)).fontSize(12),
+      ].toColumn();
 
   @override
   Widget build(BuildContext context) {
@@ -79,12 +89,12 @@ class UserCard extends StatelessWidget {
         .toColumn(mainAxisAlignment: MainAxisAlignment.spaceAround)
         .padding(horizontal: 20, vertical: 10)
         .decorated(
-        color: const Color(0xff3977ff), borderRadius: BorderRadius.circular(20))
+            color: const Color(0xff3977ff), borderRadius: BorderRadius.circular(20))
         .elevation(
-      5,
-      shadowColor: const Color(0xff3977ff),
-      borderRadius: BorderRadius.circular(20),
-    )
+          5,
+          shadowColor: const Color(0xff3977ff),
+          borderRadius: BorderRadius.circular(20),
+        )
         .height(175)
         .alignment(Alignment.center);
   }
@@ -118,11 +128,11 @@ class ActionsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => <Widget>[
-    _buildActionItem('Wallet', Icons.attach_money),
-    _buildActionItem('Delivery', Icons.card_giftcard),
-    _buildActionItem('Message', Icons.message),
-    _buildActionItem('Service', Icons.room_service),
-  ].toRow(mainAxisAlignment: MainAxisAlignment.spaceAround);
+        _buildActionItem('Point', Icons.attach_money),
+        _buildActionItem('Saved', Icons.favorite),
+        _buildActionItem('Message', Icons.message),
+        _buildActionItem('Service', Icons.room_service),
+      ].toRow(mainAxisAlignment: MainAxisAlignment.spaceAround);
 }
 
 class SettingsItemModel {
@@ -140,28 +150,28 @@ class SettingsItemModel {
 
 const List<SettingsItemModel> settingsItems = [
   SettingsItemModel(
-    icon: Icons.location_on,
-    color: Color(0xff8D7AEE),
-    title: 'Address',
-    description: 'Ensure your harvesting address',
+    icon: Icons.arrow_circle_right_outlined,
+    color: Colors.brown, //Color(0xff8D7AEE),
+    title: '브론즈',
+    description: '우리학교에서 풀지 못한 브론즈 문제',
   ),
   SettingsItemModel(
-    icon: Icons.lock,
-    color: Color(0xffF468B7),
-    title: 'Privacy',
-    description: 'System permission change',
+    icon: Icons.arrow_circle_right_outlined,
+    color: Color(0xffC0C0C0), //Color(0xffF468B7),
+    title: '실버',
+    description: '우리학교에서 풀지 못한 실버 문제',
   ),
   SettingsItemModel(
-    icon: Icons.menu,
+    icon: Icons.arrow_circle_right_outlined,
     color: Color(0xffFEC85C),
-    title: 'General',
-    description: 'Basic functional settings',
+    title: '골드',
+    description: '우리학교에서 풀지 못한 골드 문제',
   ),
   SettingsItemModel(
-    icon: Icons.notifications,
+    icon: Icons.arrow_circle_right_outlined,
     color: Color(0xff5FD0D3),
-    title: 'Notifications',
-    description: 'Take over the news in time',
+    title: 'HOT',
+    description: '우리학교에서 많이 풀린 문제',
   ),
   SettingsItemModel(
     icon: Icons.question_answer,
@@ -177,11 +187,11 @@ class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) => settingsItems
       .map((settingsItem) => SettingsItem(
-    settingsItem.icon,
-    settingsItem.color,
-    settingsItem.title,
-    settingsItem.description,
-  ))
+            settingsItem.icon,
+            settingsItem.color,
+            settingsItem.title,
+            settingsItem.description,
+          ))
       .toList()
       .toColumn();
 }
@@ -211,26 +221,26 @@ class _SettingsItemState extends State<SettingsItem> {
         .clipRRect(all: 25) // clip ripple
         .borderRadius(all: 25, animate: true)
         .elevation(
-      pressed ? 0 : 20,
-      borderRadius: BorderRadius.circular(25),
-      shadowColor: const Color(0x30000000),
-    ) // shadow borderRadius
+          pressed ? 0 : 20,
+          borderRadius: BorderRadius.circular(25),
+          shadowColor: Color(0x30000000),
+        ) // shadow borderRadius
         .constrained(height: 80)
         .padding(vertical: 12) // margin
         .gestures(
-      onTapChange: (tapStatus) => setState(() => pressed = tapStatus),
-      onTapDown: (details) => print('tapDown'),
-      onTap: () => print('onTap'),
-    )
-        .scale(animate: true,)
+          onTapChange: (tapStatus) => setState(() => pressed = tapStatus),
+          onTapDown: (details) => print('tapDown'),
+          onTap: () => print('onTap'),
+        )
+        .scale(all: pressed ? 0.95 : 1.0, animate: true)
         .animate(const Duration(milliseconds: 150), Curves.easeOut);
 
     final Widget icon = Icon(widget.icon, size: 20, color: Colors.white)
         .padding(all: 12)
         .decorated(
-      color: widget.iconBgColor,
-      borderRadius: BorderRadius.circular(30),
-    )
+          color: widget.iconBgColor,
+          borderRadius: BorderRadius.circular(30),
+        )
         .padding(left: 15, right: 10);
 
     final Widget title = Text(

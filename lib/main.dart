@@ -1,9 +1,9 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart'
     hide EmailAuthProvider, PhoneAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:styled_widget/styled_widget.dart';
 
@@ -40,9 +40,12 @@ class ApplicationState extends ChangeNotifier {
   }
 }
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(
       create: (context) => ApplicationState(),
@@ -57,19 +60,20 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/home',
+      initialRoute: '/sign-in',
       routes: {
-        '/home': (context) {
-          return HomePage();
+        '/': (context) {
+          return SafeArea(child: HomePage());
         },
         '/sign-in': ((context) {
           return SignInScreen(
             actions: [
-              ForgotPasswordAction((context, email) {
+              ForgotPasswordAction(((context, email) {
                 Navigator.of(context).pushNamed('/forgot-password', arguments: {'email': email});
-              }),
+              })),
               AuthStateChangeAction((context, state) {
                 if(state is SignedIn || state is UserCreated) {
+                  log("come?");
                   var user = (state is SignedIn)
                       ? state.user
                       : (state as UserCreated).credential.user;
@@ -81,13 +85,13 @@ class App extends StatelessWidget {
                   }
                   if(!user.emailVerified) {
                     user.sendEmailVerification();
-                    const snackbar = SnackBar(
+                    const snackBar = SnackBar(
                       content: Text(
                           'Please check your email to verify your email address.\n'
                               '이메일 등록 확인을 위해 이메일을 확인해주세요.'));
-                    ScaffoldMessenger.of(context).showSnackBar(snackbar);
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
                   }
-                  Navigator.of(context).pushReplacementNamed('/home');
+                  Navigator.of(context).pushReplacementNamed('/');
                 }
               }),
             ],
