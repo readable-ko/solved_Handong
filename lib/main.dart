@@ -1,9 +1,10 @@
+//This code is Ref by https://firebase.google.com/codelabs/firebase-get-to-know-flutter#4
 import 'dart:async';
 import 'dart:developer';
-import 'package:firebase_auth/firebase_auth.dart'
-    hide EmailAuthProvider, PhoneAuthProvider;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:flutterfire_ui/auth.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:styled_widget/styled_widget.dart';
 
@@ -24,10 +25,7 @@ class ApplicationState extends ChangeNotifier {
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
 
-    FirebaseUIAuth.configureProviders([
-      EmailAuthProvider(),
-    ]);
-
+    FirebaseAuth.instance.authStateChanges();
     FirebaseAuth.instance.userChanges().listen((user) {
       if (user != null) {
         _loggedIn = true;
@@ -56,66 +54,97 @@ void main() async {
 
 class App extends StatelessWidget {
   const App({super.key});
-
+  // final Stream<ApplicationState> _checker = (() {
+  //   late final StreamController<ApplicationState> controller;
+  //   controller = StreamController<ApplicationState>(
+  //     onListen: () async {
+  //       ApplicationState().loggedIn;
+  //       FirebaseAuth.instance.authStateChanges();
+  //     },
+  //   );
+  //   return controller.stream;
+  // })();
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/sign-in',
       routes: {
-        '/': (context) {
-          return SafeArea(child: HomePage());
+        '/home': (context) {
+          return const SafeArea(child: HomePage());
         },
-        '/sign-in': ((context) {
-          return SignInScreen(
-            actions: [
-              ForgotPasswordAction(((context, email) {
-                Navigator.of(context).pushNamed('/forgot-password', arguments: {'email': email});
-              })),
-              AuthStateChangeAction((context, state) {
-                if(state is SignedIn || state is UserCreated) {
-                  log("come?");
-                  var user = (state is SignedIn)
-                      ? state.user
-                      : (state as UserCreated).credential.user;
-                  if(user == null) {
-                    return;
-                  }
-                  if(state is UserCreated) {
-                    user.updateDisplayName(user.email!.split('@')[0]);
-                  }
-                  if(!user.emailVerified) {
-                    user.sendEmailVerification();
-                    const snackBar = SnackBar(
-                      content: Text(
-                          'Please check your email to verify your email address.\n'
-                              '이메일 등록 확인을 위해 이메일을 확인해주세요.'));
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  }
-                  Navigator.of(context).pushReplacementNamed('/');
-                }
-              }),
-            ],
-          );
-        }),
-        '/forgot-password': ((context) {
-          final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-
-          return ForgotPasswordScreen(
-            email: arguments?['email'] as String,
-            headerMaxExtent: 200,
-          );
-        }),
-        '/profile': ((context) {
+        '/profile': (context) {
           return ProfileScreen(
-            providers: [],
+            appBar: AppBar(
+              title: const Text('User Profile'),
+            ),
             actions: [
-              SignedOutAction((context) {Navigator.of(context).pushReplacementNamed('/home');}),
+              SignedOutAction((context) {
+                Navigator.of(context).pop();
+              })
+            ],
+            children: const [
+              Divider(),
+              Padding(
+                padding: EdgeInsets.all(2),
+                child: Text('Test'),
+              ),
+              Divider(),
             ],
           );
-        }),
+        }
       },
-      title: 'Handong Solved',
+      debugShowCheckedModeBanner: false,
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return SignInScreen(
+              providerConfigs: const [
+                EmailProviderConfiguration(),
+                GoogleProviderConfiguration(
+                    clientId:
+                        '231870076850-mhut750a5il7hqim52d5g646b474uht1.apps.googleusercontent.com'),
+              ],
+              headerBuilder: (context, constraints, shrinkOffset) {
+                return Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Lottie.asset('asset/ball.json'),
+                  ),
+                );
+              },
+              subtitleBuilder: (context, action) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: action == AuthAction.signIn
+                      ? const Text('Welcome to Solved-Handong, please Sign In!')
+                      : const Text('Welcome to Solved-Handong, please Sign Up!'),
+                );
+              },
+              footerBuilder: (context, action) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Text(
+                    '로그인을 통해 약관 동의를 대신하며, 서비스를 이용할 수 있습니다.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+              },
+              sideBuilder: (context, shrinkOffset) {
+                return Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Lottie.asset('asset/ball.json'),
+                  ),
+                );
+              },
+            );
+          }
 
+          return const HomePage();
+        },
+      ),
     );
   }
 }

@@ -45,6 +45,7 @@ dependencies:
   google_sign_in: ^5.4.2
   styled_widget: ^0.4.1
   flutterfire_ui: ^0.4.3+20
+  lottie: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -67,7 +68,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
+  assets:
+    - asset/ball.json
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

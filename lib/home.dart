@@ -1,5 +1,5 @@
 // App design: https://dribbble.com/shots/6459693-Creative-layout-design
-
+//This main page is Ref from https://github.com/ReinBentdal/styled_widget/wiki/demo_app git example.
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +21,25 @@ class HomePage extends StatelessWidget {
       builder: (context, appState, child) => Scaffold(
         appBar: AppBar(
           title: const Text('Main Page'),
+        ),
+        drawer: Drawer(
+          child: ListView(
+            children: [
+              const DrawerHeader(
+                child: Text('Main Menu'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.home),
+                title: const Text('Home'),
+                onTap: (){Navigator.of(context).pushReplacementNamed('/home');},
+              ),
+              ListTile(
+                leading: const Icon(Icons.account_circle_rounded),
+                title: const Text('Profile'),
+                onTap: (){Navigator.of(context).pushNamed('/profile');},
+              )
+            ],
+          ),
         ),
         body: Column(
           children: const [
