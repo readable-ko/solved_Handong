@@ -1,11 +1,24 @@
 //This code is Ref by https://firebase.google.com/codelabs/firebase-get-to-know-flutter#4
+
+// 유저가 푼 문제에 cnt++ 해서 학교에서 가장 많이 푼 찾기 가능.
+// 한동대학교 유저 https://solved.ac/api/v3/ranking/in_organization?organizationId=412
+// 사용자가 푼 문제 https://solved.ac/api/v3/search/problem?query=s%40fpqpsxh
+// 사용자가 푼 문제 https://solved.ac/api/v3/search/problem?query=s%40fpqpsxh&page=7 페이지가 있다 스벌.
+// 사용자가 푼 문제 https://solved.ac/api/v3/search/problem?query=solved_by%3A{user_id}&sort=level&direction=desc
+// 사용자 정보 https://solved.ac/api/v3/user/show?handle=fpqpsxh (여기 토탈 문 문제수랑 대학 순위도 있음)
+// https://solved.ac/api/v3/search/user?query=fpqpsxh
+// 로그인된 유저 https://solved.ac/api/v3/account/verify_credentials
+// 난이도 별 문제 긁어오기 https://solved.ac/api/v3/search/problem?query=tier%3A{level}
 import 'dart:async';
 import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutterfire_ui/auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:solved_handong/src/provider.dart';
+import 'package:solved_handong/unsolved.dart';
 import 'package:styled_widget/styled_widget.dart';
 
 import 'firebase_options.dart';
@@ -13,30 +26,6 @@ import 'package:flutter/material.dart';
 
 import 'home.dart';
 
-class ApplicationState extends ChangeNotifier {
-  ApplicationState() {
-    init();
-  }
-
-  bool _loggedIn = false;
-  bool get loggedIn => _loggedIn;
-
-  Future<void> init() async {
-    await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
-
-    FirebaseAuth.instance.authStateChanges();
-    FirebaseAuth.instance.userChanges().listen((user) {
-      if (user != null) {
-        _loggedIn = true;
-      } else {
-        _loggedIn = false;
-      }
-
-      notifyListeners();
-    });
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -90,6 +79,9 @@ class App extends StatelessWidget {
               Divider(),
             ],
           );
+        },
+        '/unsol': (context) {
+          return UnsolPage();
         }
       },
       debugShowCheckedModeBanner: false,

@@ -1,9 +1,14 @@
 // App design: https://dribbble.com/shots/6459693-Creative-layout-design
 //This main page is Ref from https://github.com/ReinBentdal/styled_widget/wiki/demo_app git example.
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:solved_handong/src/provider.dart';
 import 'package:styled_widget/styled_widget.dart';
+import 'package:http/http.dart' as http ;
 
 import 'main.dart';
 
@@ -17,39 +22,84 @@ class HomePage extends StatelessWidget {
         .constrained(minHeight: MediaQuery.of(context).size.height - (2 * 30))
         .scrollable();
 
-    return Consumer<ApplicationState>(
-      builder: (context, appState, child) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Main Page'),
-        ),
-        drawer: Drawer(
-          child: ListView(
-            children: [
-              const DrawerHeader(
-                child: Text('Main Menu'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Home'),
-                onTap: (){Navigator.of(context).pushReplacementNamed('/home');},
-              ),
-              ListTile(
-                leading: const Icon(Icons.account_circle_rounded),
-                title: const Text('Profile'),
-                onTap: (){Navigator.of(context).pushNamed('/profile');},
-              )
-            ],
+    Widget _buildMobile() {
+      return Consumer<ApplicationState>(
+        builder: (context, appState, child) => Scaffold(
+          appBar: AppBar(
+            title: const Text('Main Page'),
           ),
+          drawer: Drawer(
+            child: ListView(
+              children: [
+                const DrawerHeader(
+                  child: Text('Main Menu'),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.home),
+                  title: const Text('Home'),
+                  onTap: () {
+                    Navigator.of(context).pushReplacementNamed('/home');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.account_circle_rounded),
+                  title: const Text('Profile'),
+                  onTap: () {
+                    Navigator.of(context).pushNamed('/profile');
+                  },
+                )
+              ],
+            ),
+          ),
+          body: Column(
+            children: const [
+              UserCard(),
+              ActionsRow(),
+              Settings(),
+            ],
+          ).parent(page),
         ),
-        body: Column(
-          children: const [
-            UserCard(),
-            ActionsRow(),
-            Settings(),
-          ],
-        ).parent(page),
-      ),
-    );
+      );
+    }
+
+    Widget _buildPC() {
+      return Consumer<ApplicationState>(
+        builder: (context, appState, child) => Scaffold(
+          appBar: AppBar(
+            title: const Text('Main Page'),
+          ),
+          body: Row(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Flexible(
+                  flex: 1,
+                  child: Column(
+                    children: const [
+                      UserCard(),
+                      ActionsRow(),
+                    ],
+                  )),
+              const Flexible(
+                flex: 2,
+                child: Settings(),
+              ),
+            ],
+          ).parent(page),
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constrained) {
+      return Container(
+        width: constrained.maxWidth,
+        height: constrained.maxHeight,
+        child: (constrained.maxWidth / constrained.maxHeight) >= 1
+            ? _buildPC()
+            : _buildMobile(),
+      );
+    });
   }
 }
 
@@ -108,7 +158,8 @@ class UserCard extends StatelessWidget {
         .toColumn(mainAxisAlignment: MainAxisAlignment.spaceAround)
         .padding(horizontal: 20, vertical: 10)
         .decorated(
-            color: const Color(0xff3977ff), borderRadius: BorderRadius.circular(20))
+            color: const Color(0xff3977ff),
+            borderRadius: BorderRadius.circular(20))
         .elevation(
           5,
           shadowColor: const Color(0xff3977ff),
@@ -123,13 +174,14 @@ class ActionsRow extends StatelessWidget {
   const ActionsRow({super.key});
 
   Widget _buildActionItem(String name, IconData icon) {
-    final Widget actionIcon = Icon(icon, size: 20, color: const Color(0xFF42526F))
-        .alignment(Alignment.center)
-        .ripple()
-        .constrained(width: 50, height: 50)
-        .backgroundColor(const Color(0xfff6f5f8))
-        .clipOval()
-        .padding(bottom: 5);
+    final Widget actionIcon =
+        Icon(icon, size: 20, color: const Color(0xFF42526F))
+            .alignment(Alignment.center)
+            .ripple()
+            .constrained(width: 50, height: 50)
+            .backgroundColor(const Color(0xfff6f5f8))
+            .clipOval()
+            .padding(bottom: 5);
 
     final Widget actionText = Text(
       name,
@@ -216,7 +268,8 @@ class Settings extends StatelessWidget {
 }
 
 class SettingsItem extends StatefulWidget {
-  const SettingsItem(this.icon, this.iconBgColor, this.title, this.description, {super.key});
+  const SettingsItem(this.icon, this.iconBgColor, this.title, this.description,
+      {super.key});
 
   final IconData icon;
   final Color iconBgColor;
@@ -225,6 +278,17 @@ class SettingsItem extends StatefulWidget {
 
   @override
   _SettingsItemState createState() => _SettingsItemState();
+}
+
+Future<void> getAPI() async {
+  final response = await http.get(
+    Uri.parse('https://solved.ac/api/v3/search/problem?query=s%40fpqpsxh')
+  );
+  if(response.statusCode == 200){
+    final resJson = jsonDecode(response.body);
+    log('word is ${resJson['count']}');
+    log('word is ${resJson['items'][45]['problemId']}');
+  }
 }
 
 class _SettingsItemState extends State<SettingsItem> {
@@ -249,7 +313,10 @@ class _SettingsItemState extends State<SettingsItem> {
         .gestures(
           onTapChange: (tapStatus) => setState(() => pressed = tapStatus),
           onTapDown: (details) => print('tapDown'),
-          onTap: () => print('onTap'),
+          onTap: () {
+            getAPI();
+            Navigator.pushNamed(context, '/unsol');
+            },
         )
         .scale(all: pressed ? 0.95 : 1.0, animate: true)
         .animate(const Duration(milliseconds: 150), Curves.easeOut);
