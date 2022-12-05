@@ -1,14 +1,11 @@
 // App design: https://dribbble.com/shots/6459693-Creative-layout-design
 //This main page is Ref from https://github.com/ReinBentdal/styled_widget/wiki/demo_app git example.
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:solved_handong/src/provider.dart';
+import 'package:sidebarx/sidebarx.dart';
+import 'package:solved_handong/unsolved.dart';
 import 'package:styled_widget/styled_widget.dart';
-import 'package:http/http.dart' as http ;
 
 import 'main.dart';
 
@@ -52,12 +49,12 @@ class HomePage extends StatelessWidget {
             ),
           ),
           body: Column(
-            children: const [
-              UserCard(),
-              ActionsRow(),
-              Settings(),
-            ],
-          ).parent(page),
+                children: const [
+                  UserCard(),
+                  ActionsRow(),
+                  Settings(),
+                ],
+              ).parent(page),
         ),
       );
     }
@@ -72,13 +69,29 @@ class HomePage extends StatelessWidget {
             mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SidebarX(
+                controller: SidebarXController(selectedIndex: 0),
+                items: [
+                  SidebarXItem(
+                      icon: Icons.home, label: 'Home',
+                      onTap: (){Navigator.of(context).pushReplacementNamed('/home');}
+                  ),
+                  SidebarXItem(
+                    icon: Icons.account_circle_rounded, label: 'Profile',
+                    onTap: (){Navigator.of(context).pushNamed('/profile');}
+                  ),
+                ],
+              ),
               Flexible(
                   flex: 1,
-                  child: Column(
-                    children: const [
-                      UserCard(),
-                      ActionsRow(),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(0,10,15,0),
+                    child: Column(
+                      children: const [
+                        UserCard(),
+                        ActionsRow(),
+                      ],
+                    ),
                   )),
               const Flexible(
                 flex: 2,
@@ -95,7 +108,7 @@ class HomePage extends StatelessWidget {
       return Container(
         width: constrained.maxWidth,
         height: constrained.maxHeight,
-        child: (constrained.maxWidth / constrained.maxHeight) >= 1
+        child: (constrained.maxWidth / constrained.maxHeight) >= 1.1
             ? _buildPC()
             : _buildMobile(),
       );
@@ -211,11 +224,13 @@ class SettingsItemModel {
   final Color color;
   final String title;
   final String description;
+  final int range;
   const SettingsItemModel({
     required this.color,
     required this.description,
     required this.icon,
     required this.title,
+    required this.range,
   });
 }
 
@@ -225,30 +240,42 @@ const List<SettingsItemModel> settingsItems = [
     color: Colors.brown, //Color(0xff8D7AEE),
     title: '브론즈',
     description: '우리학교에서 풀지 못한 브론즈 문제',
+    range: 0,
   ),
   SettingsItemModel(
     icon: Icons.arrow_circle_right_outlined,
     color: Color(0xffC0C0C0), //Color(0xffF468B7),
     title: '실버',
     description: '우리학교에서 풀지 못한 실버 문제',
+    range: 1
   ),
   SettingsItemModel(
     icon: Icons.arrow_circle_right_outlined,
     color: Color(0xffFEC85C),
     title: '골드',
     description: '우리학교에서 풀지 못한 골드 문제',
+    range: 2
   ),
   SettingsItemModel(
     icon: Icons.arrow_circle_right_outlined,
     color: Color(0xff5FD0D3),
-    title: 'HOT',
+    title: '플레티넘',
     description: '우리학교에서 많이 풀린 문제',
+    range: 3
+  ),
+  SettingsItemModel(
+      icon: Icons.arrow_circle_right_outlined,
+      color: Color(0xff8b0000),
+      title: 'HOT',
+      description: '우리학교에서 많이 풀린 문제',
+      range: 4
   ),
   SettingsItemModel(
     icon: Icons.question_answer,
     color: Color(0xffBFACAA),
     title: 'Support',
     description: 'We are here to help',
+    range: 5
   ),
 ];
 
@@ -262,40 +289,33 @@ class Settings extends StatelessWidget {
             settingsItem.color,
             settingsItem.title,
             settingsItem.description,
+            settingsItem.range,
           ))
       .toList()
       .toColumn();
 }
 
 class SettingsItem extends StatefulWidget {
-  const SettingsItem(this.icon, this.iconBgColor, this.title, this.description,
+  const SettingsItem(this.icon, this.iconBgColor, this.title, this.description, this.range,
       {super.key});
 
   final IconData icon;
   final Color iconBgColor;
   final String title;
   final String description;
+  final int range;
 
   @override
   _SettingsItemState createState() => _SettingsItemState();
 }
 
-Future<void> getAPI() async {
-  final response = await http.get(
-    Uri.parse('https://solved.ac/api/v3/search/problem?query=s%40fpqpsxh')
-  );
-  if(response.statusCode == 200){
-    final resJson = jsonDecode(response.body);
-    log('word is ${resJson['count']}');
-    log('word is ${resJson['items'][45]['problemId']}');
-  }
-}
+
 
 class _SettingsItemState extends State<SettingsItem> {
   bool pressed = false;
-
   @override
   Widget build(BuildContext context) {
+    int range = widget.range;
     settingsItem({required Widget child}) => Styled.widget(child: child)
         .alignment(Alignment.center)
         .borderRadius(all: 15)
@@ -314,8 +334,12 @@ class _SettingsItemState extends State<SettingsItem> {
           onTapChange: (tapStatus) => setState(() => pressed = tapStatus),
           onTapDown: (details) => print('tapDown'),
           onTap: () {
-            getAPI();
-            Navigator.pushNamed(context, '/unsol');
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      UnsolPage(range: range)),
+            );
             },
         )
         .scale(all: pressed ? 0.95 : 1.0, animate: true)
