@@ -40,7 +40,8 @@ void main() async {
         builder: ((context, child) => const App()),
       ),
     ],
-  ));
+  ),
+  );
 }
 
 class App extends StatelessWidget {
@@ -58,6 +59,9 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        primaryColor: const Color(0xff3977ff),
+      ),
       routes: {
         '/home': (context) {
           return const SafeArea(child: HomePage());
@@ -159,6 +163,46 @@ class ApplicationState extends ChangeNotifier {
   Map<int, FirebaseItems> get userSolvedProblem => _userSolvedProblem;
   List<List <FirebaseItems>> _unsolvedProblem = [[],[],[],[]];
   List<FirebaseItems> unsolvedProblem(int idx) => _unsolvedProblem[idx];
+  Map<int, FirebaseItems> savedList = {} ;
+
+  Future setUserInfo() async {
+    if(!FirebaseAuth.instance.currentUser!.isAnonymous) {
+      FirebaseFirestore.instance.collection('loginuser').doc(FirebaseAuth.instance.currentUser!.uid)
+          .set(<String, dynamic>{
+        "email": FirebaseAuth.instance.currentUser!.email,
+        "name": FirebaseAuth.instance.currentUser!.displayName,
+        "uid": FirebaseAuth.instance.currentUser!.uid,
+        "saved": savedList.keys
+      });
+    }
+  }
+
+  Future getUserInfo() async {
+    if(!FirebaseAuth.instance.currentUser!.isAnonymous) {
+      FirebaseFirestore.instance.collection('loginuser').snapshots().listen(
+          (snapshot) {
+            for(final document in snapshot.docs) {
+              if(document.data()['uid'] == FirebaseAuth.instance.currentUser!.uid.toString()) {
+                List<dynamic> tmp = document.data()['saved'] as List<dynamic>;
+                log('tmp length is ${tmp.length}');
+                if(tmp.isEmpty || tmp == null) return;
+                for(final prob in tmp) {
+                  log('prob is ${prob}');
+                  for(int lev = 0 ; lev < 4 ; lev++) {
+                    for(final probUn in _unsolvedProblem[lev]) {
+                      if(probUn.problemId == prob) {
+                        savedList[prob] = probUn;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+      );
+      notifyListeners();
+    }
+  }
 
   Future setUserinfo() async{
     final User? user_login = FirebaseAuth.instance.currentUser;
@@ -430,7 +474,9 @@ class ApplicationState extends ChangeNotifier {
       notifyListeners();
     });
 
+    //TODO user info.
     setUserinfo();
+
     //check fire base time
     if(firebaseTime.time.toDate().difference(DateTime.now()).inMinutes.abs() > 5) {
       log('[checking Time]');
@@ -441,29 +487,30 @@ class ApplicationState extends ChangeNotifier {
       log('Time is less than 5 min');
     }
 
+    //TODO: just stoped for firebase read
     //if time, start loop
-    if(apiRest == true) {
-      getUserList();
-      log(_changedUser.keys.toString());
-      String lastFixedHandle = "";
-
-      if(_changedUser.isNotEmpty) {
-        for (var value in _changedUser.keys) {
-          log("[changedUser] ${value}value is :${_changedUser[value]!}");
-          lastFixedHandle = value;
-          getUserSolvedAPI(value, _changedUser[value]!.toInt());
-        }
-
-        FirebaseFirestore.instance.collection('Info').doc('refresh')
-            .set(<String, dynamic>{
-        'time': FieldValue.serverTimestamp(),
-        'userName': lastFixedHandle,});
-        apiRest = false;
-      }
-
-      getUnsolvedList();
-      notifyListeners();
-    }
+    // if(apiRest == true) {
+    //   //getUserList();
+    //   log(_changedUser.keys.toString());
+    //   String lastFixedHandle = "";
+    //
+    //   if(_changedUser.isNotEmpty) {
+    //     for (var value in _changedUser.keys) {
+    //       log("[changedUser] ${value}value is :${_changedUser[value]!}");
+    //       lastFixedHandle = value;
+    //       getUserSolvedAPI(value, _changedUser[value]!.toInt());
+    //     }
+    //
+    //     FirebaseFirestore.instance.collection('Info').doc('refresh')
+    //         .set(<String, dynamic>{
+    //     'time': FieldValue.serverTimestamp(),
+    //     'userName': lastFixedHandle,});
+    //     apiRest = false;
+    //   }
+    //
+    //   getUnsolvedList();
+    //   notifyListeners();
+    // }
 
     //this is get for user solved problem list
     FirebaseFirestore.instance
@@ -537,6 +584,8 @@ class ApplicationState extends ChangeNotifier {
       });
 
     }
+
+    getUserInfo();
   }
 }
 

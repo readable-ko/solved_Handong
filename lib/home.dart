@@ -1,7 +1,9 @@
 // App design: https://dribbble.com/shots/6459693-Creative-layout-design
 //This main page is Ref from https://github.com/ReinBentdal/styled_widget/wiki/demo_app git example.
+import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:sidebarx/sidebarx.dart';
 import 'package:solved_handong/unsolved.dart';
@@ -19,6 +21,32 @@ class HomePage extends StatelessWidget {
         .constrained(minHeight: MediaQuery.of(context).size.height - (2 * 30))
         .scrollable();
 
+    List<SideMenuItem> sideRail = [
+      SideMenuItem(
+        // Priority of item to show on SideMenu, lower value is displayed at the top
+        priority: 0,
+        title: 'Home',
+        onTap: () => Navigator.of(context).pushReplacementNamed('/home'),
+        icon: const Icon(Icons.home),
+        // badgeContent: Text(
+        //   '3',
+        //   style: TextStyle(color: Colors.white),
+        // ),
+      ),
+      SideMenuItem(
+        priority: 1,
+        title: 'Profile',
+        onTap: () => Navigator.of(context).pushNamed('/profile'),
+        icon: const Icon(Icons.account_circle_rounded),
+      ),
+      SideMenuItem(
+        priority: 2,
+        title: 'Exit',
+        onTap: () => print('hee'),
+        icon: const Icon(Icons.exit_to_app),
+      ),
+    ];
+
     Widget _buildMobile() {
       return Consumer<ApplicationState>(
         builder: (context, appState, child) => Scaffold(
@@ -28,8 +56,8 @@ class HomePage extends StatelessWidget {
           drawer: Drawer(
             child: ListView(
               children: [
-                const DrawerHeader(
-                  child: Text('Main Menu'),
+                DrawerHeader(
+                  child: Lottie.asset('asset/spaceman.json'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.home),
@@ -59,6 +87,7 @@ class HomePage extends StatelessWidget {
       );
     }
 
+    PageController pagecontroller = PageController();
     Widget _buildPC() {
       return Consumer<ApplicationState>(
         builder: (context, appState, child) => Scaffold(
@@ -69,21 +98,16 @@ class HomePage extends StatelessWidget {
             mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SidebarX(
-                controller: SidebarXController(selectedIndex: 0),
-                items: [
-                  SidebarXItem(
-                      icon: Icons.home, label: 'Home',
-                      onTap: (){Navigator.of(context).pushReplacementNamed('/home');}
-                  ),
-                  SidebarXItem(
-                    icon: Icons.account_circle_rounded, label: 'Profile',
-                    onTap: (){Navigator.of(context).pushNamed('/profile');}
-                  ),
-                ],
+              Flexible(
+                flex: 1,
+                child: SideMenu(
+                  items: sideRail,
+                  controller: pagecontroller,
+
+                ),
               ),
               Flexible(
-                  flex: 1,
+                  flex: 2,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0,10,15,0),
                     child: Column(
@@ -94,7 +118,7 @@ class HomePage extends StatelessWidget {
                     ),
                   )),
               const Flexible(
-                flex: 2,
+                flex: 3,
                 child: Settings(),
               ),
             ],
