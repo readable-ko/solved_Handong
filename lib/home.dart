@@ -41,6 +41,12 @@ class HomePage extends StatelessWidget {
       ),
       SideMenuItem(
         priority: 2,
+        title: 'Saved',
+        onTap: () => Navigator.of(context).pushNamed('/saved'),
+        icon: const Icon(Icons.save),
+      ),
+      SideMenuItem(
+        priority: 2,
         title: 'Exit',
         onTap: () => print('hee'),
         icon: const Icon(Icons.exit_to_app),
@@ -71,6 +77,13 @@ class HomePage extends StatelessWidget {
                   title: const Text('Profile'),
                   onTap: () {
                     Navigator.of(context).pushNamed('/profile');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.save),
+                  title: const Text('Saved List'),
+                  onTap: () {
+                    Navigator.of(context).pushNamed('/saved');
                   },
                 )
               ],

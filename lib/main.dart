@@ -19,6 +19,7 @@ import 'package:flutterfire_ui/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:solved_handong/saved.dart';
 import 'package:solved_handong/unsolved.dart';
 import 'package:styled_widget/styled_widget.dart';
 
@@ -65,6 +66,9 @@ class App extends StatelessWidget {
       routes: {
         '/home': (context) {
           return const SafeArea(child: HomePage());
+        },
+        '/saved': (context) {
+          return SavedPage();
         },
         '/profile': (context) {
           return ProfileScreen(
