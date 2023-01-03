@@ -72,7 +72,7 @@ class _UnsolPageState extends State<UnsolPage> {
             fontSize: 16,
           ),
         ).padding(bottom: 5),
-        aps.savedList.containsKey(item.problemId) ? const Icon(Icons.star) : const Icon(Icons.star_border_outlined),
+        aps.savedList.containsKey(item.problemId) ? const Icon(Icons.star, color: Color(0xffDAA520),) : const Icon(Icons.star_border_outlined),
       ].toRow(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,6 +110,12 @@ class _UnsolPageState extends State<UnsolPage> {
       ),
       SideMenuItem(
         priority: 2,
+        title: 'Saved',
+        onTap: () => Navigator.of(context).pushNamed('/saved'),
+        icon: const Icon(Icons.save),
+      ),
+      SideMenuItem(
+        priority: 2,
         title: 'Exit',
         onTap: () => print('hee'),
         icon: const Icon(Icons.exit_to_app),
@@ -127,14 +133,14 @@ class _UnsolPageState extends State<UnsolPage> {
             mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Flexible(
-                flex: 1,
-                child: SideMenu(
-                  items: sideRail,
-                  controller: pagecontroller,
-
-                ),
-              ),
+              // Flexible(
+              //   flex: 1,
+              //   child: SideMenu(
+              //     items: sideRail,
+              //     controller: pagecontroller,
+              //
+              //   ),
+              // ),
               Flexible(
                   flex: 2,
                   child: Padding(

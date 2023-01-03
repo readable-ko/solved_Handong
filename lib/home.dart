@@ -1,11 +1,14 @@
 // App design: https://dribbble.com/shots/6459693-Creative-layout-design
 //This main page is Ref from https://github.com/ReinBentdal/styled_widget/wiki/demo_app git example.
+import 'dart:developer';
+
 import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:sidebarx/sidebarx.dart';
+import 'package:solved_handong/rank.dart';
 import 'package:solved_handong/unsolved.dart';
 import 'package:styled_widget/styled_widget.dart';
 
@@ -16,6 +19,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    aps = Provider.of<ApplicationState>(context, listen: false);
     page({required Widget child}) => Styled.widget(child: child)
         .padding(vertical: 30, horizontal: 20)
         .constrained(minHeight: MediaQuery.of(context).size.height - (2 * 30))
@@ -44,6 +48,12 @@ class HomePage extends StatelessWidget {
         title: 'Saved',
         onTap: () => Navigator.of(context).pushNamed('/saved'),
         icon: const Icon(Icons.save),
+      ),
+      SideMenuItem(
+        priority: 2,
+        title: 'Rank',
+        onTap: () => Navigator.of(context).pushNamed('/rank'),
+        icon: const Icon(Icons.workspace_premium),
       ),
       SideMenuItem(
         priority: 2,
@@ -81,9 +91,17 @@ class HomePage extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.save),
-                  title: const Text('Saved List'),
+                  title: const Text('Saved'),
                   onTap: () {
                     Navigator.of(context).pushNamed('/saved');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.workspace_premium),
+                  title: const Text('Rank'),
+                  onTap: () {
+                    //log(' userList is ${aps.userList[0].handle}');
+                    Navigator.of(context).pushNamed('/rank');
                   },
                 )
               ],
@@ -116,7 +134,6 @@ class HomePage extends StatelessWidget {
                 child: SideMenu(
                   items: sideRail,
                   controller: pagecontroller,
-
                 ),
               ),
               Flexible(
@@ -124,9 +141,15 @@ class HomePage extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0,10,15,0),
                     child: Column(
-                      children: const [
+                      children: [
                         UserCard(),
                         ActionsRow(),
+                        Container(
+                          child: RankPage(),
+                          width: double.infinity,
+                          height: 270,
+                        )
+                        //Expanded(child: RankPage()),
                       ],
                     ),
                   )),
@@ -188,10 +211,10 @@ class UserCard extends StatelessWidget {
 
   Widget _buildUserStats() {
     return <Widget>[
-      _buildUserStatsItem('846', '해결함'),
-      _buildUserStatsItem('51', '등'),
-      _buildUserStatsItem('267', '포인트'),
-      _buildUserStatsItem('39', '출석'),
+      _buildUserStatsItem('${aps.loginUser['solvedCount']}', '해결함'),
+      _buildUserStatsItem('${aps.loginUser['rank']}', '등'),
+      _buildUserStatsItem('${aps.loginUser['reverseRivalCount']}', '라이벌'),
+      _buildUserStatsItem('${aps.loginUser['maxStreak']}', '연속출석'),
     ]
         .toRow(mainAxisAlignment: MainAxisAlignment.spaceAround)
         .padding(vertical: 10);

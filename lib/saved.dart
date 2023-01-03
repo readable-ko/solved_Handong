@@ -17,11 +17,7 @@ class SavedPage extends StatelessWidget {
 
   Widget leadingdescrip(FirebaseItems item) {
     String level = 'Tier ';
-    if (item.level % 5 == 0) {
-      level += '1';
-    } else {
-      level += '${6 - (item.level % 5)}';
-    }
+    level += item.level.toString();
     return Text(
       level,
       style: const TextStyle(

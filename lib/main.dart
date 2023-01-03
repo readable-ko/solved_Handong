@@ -19,6 +19,7 @@ import 'package:flutterfire_ui/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:solved_handong/rank.dart';
 import 'package:solved_handong/saved.dart';
 import 'package:solved_handong/unsolved.dart';
 import 'package:styled_widget/styled_widget.dart';
@@ -47,16 +48,35 @@ void main() async {
 
 class App extends StatelessWidget {
   const App({super.key});
-  // final Stream<ApplicationState> _checker = (() {
-  //   late final StreamController<ApplicationState> controller;
-  //   controller = StreamController<ApplicationState>(
-  //     onListen: () async {
-  //       ApplicationState().loggedIn;
-  //       FirebaseAuth.instance.authStateChanges();
-  //     },
-  //   );
-  //   return controller.stream;
-  // })();
+
+  Future getUserCredential() async {
+    final res = await http.get(Uri.parse("https://solved.ac/api/v3/account/verify_credentials"));
+    log('IN getUserCredential ${res.statusCode}');
+    if(res.statusCode == 200) {
+      final parser = jsonDecode(res.body) ;
+
+      List<UserVerification> tmp = (parser['user'] as List)
+          .map((json) => UserVerification.fromJson(json))
+          .toList();
+
+      log('IN getUserCredential : ${tmp[0]}');
+      if(tmp.isNotEmpty) {
+        for(HGUer matchUser in aps._userList) {
+          if(matchUser.handle == tmp[0].handle) {
+            FirebaseFirestore.instance.collection('loginuser').doc(FirebaseAuth.instance.currentUser!.uid)
+                .set(<String, dynamic>{
+              "email": FirebaseAuth.instance.currentUser!.email,
+              "name": FirebaseAuth.instance.currentUser!.displayName,
+              "uid": FirebaseAuth.instance.currentUser!.uid,
+              "saved": aps.savedList.keys,
+              "vertification": tmp[0],
+            });
+          }
+        }
+      }
+    }
+}
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -70,6 +90,9 @@ class App extends StatelessWidget {
         '/saved': (context) {
           return SavedPage();
         },
+        '/rank': (context) {
+          return RankPage();
+        },
         '/profile': (context) {
           return ProfileScreen(
             appBar: AppBar(
@@ -80,13 +103,18 @@ class App extends StatelessWidget {
                 Navigator.of(context).pop();
               })
             ],
-            children: const [
-              Divider(),
-              Padding(
+            children: [
+              const Divider(),
+              const Padding(
                 padding: EdgeInsets.all(2),
                 child: Text('Test'),
               ),
-              Divider(),
+              const Divider(),
+              ElevatedButton(
+                  //https://solved.ac/api/v3/account/verify_credentials
+                  onPressed: () async {getUserCredential();},
+                  child: const Text('Solved.ac 인증 정보 가져오기'),
+              ),
             ],
           );
         },
@@ -168,6 +196,7 @@ class ApplicationState extends ChangeNotifier {
   List<List <FirebaseItems>> _unsolvedProblem = [[],[],[],[]];
   List<FirebaseItems> unsolvedProblem(int idx) => _unsolvedProblem[idx];
   Map<int, FirebaseItems> savedList = {} ;
+  Map<String, dynamic> loginUser = {} ;
 
   Future setUserInfo() async {
     if(!FirebaseAuth.instance.currentUser!.isAnonymous) {
@@ -176,7 +205,8 @@ class ApplicationState extends ChangeNotifier {
         "email": FirebaseAuth.instance.currentUser!.email,
         "name": FirebaseAuth.instance.currentUser!.displayName,
         "uid": FirebaseAuth.instance.currentUser!.uid,
-        "saved": savedList.keys
+        "saved": savedList.keys,
+        "vertification": loginUser
       });
     }
   }
@@ -187,6 +217,7 @@ class ApplicationState extends ChangeNotifier {
           (snapshot) {
             for(final document in snapshot.docs) {
               if(document.data()['uid'] == FirebaseAuth.instance.currentUser!.uid.toString()) {
+                loginUser = document.data()['vertification'] as Map<String, dynamic>;
                 List<dynamic> tmp = document.data()['saved'] as List<dynamic>;
                 log('tmp length is ${tmp.length}');
                 if(tmp.isEmpty || tmp == null) return;
@@ -478,11 +509,9 @@ class ApplicationState extends ChangeNotifier {
       notifyListeners();
     });
 
-    //TODO user info.
-    setUserinfo();
 
     //check fire base time
-    if(firebaseTime.time.toDate().difference(DateTime.now()).inMinutes.abs() > 5) {
+    if(firebaseTime.time.toDate().difference(DateTime.now()).inMinutes.abs() < 15) {
       log('[checking Time]');
       apiRest = true;
       notifyListeners();
@@ -493,28 +522,29 @@ class ApplicationState extends ChangeNotifier {
 
     //TODO: just stoped for firebase read
     //if time, start loop
-    // if(apiRest == true) {
-    //   //getUserList();
-    //   log(_changedUser.keys.toString());
-    //   String lastFixedHandle = "";
-    //
-    //   if(_changedUser.isNotEmpty) {
-    //     for (var value in _changedUser.keys) {
-    //       log("[changedUser] ${value}value is :${_changedUser[value]!}");
-    //       lastFixedHandle = value;
-    //       getUserSolvedAPI(value, _changedUser[value]!.toInt());
-    //     }
-    //
-    //     FirebaseFirestore.instance.collection('Info').doc('refresh')
-    //         .set(<String, dynamic>{
-    //     'time': FieldValue.serverTimestamp(),
-    //     'userName': lastFixedHandle,});
-    //     apiRest = false;
-    //   }
-    //
-    //   getUnsolvedList();
-    //   notifyListeners();
-    // }
+    if(apiRest == true) {
+      getUserList();
+      log(_changedUser.keys.toString());
+      String lastFixedHandle = "";
+
+      if(_changedUser.isNotEmpty) {
+        for (var value in _changedUser.keys) {
+          log("[changedUser] ${value}value is :${_changedUser[value]!}");
+          lastFixedHandle = value;
+          getUserSolvedAPI(value, _changedUser[value]!.toInt());
+        }
+
+        FirebaseFirestore.instance.collection('Info').doc('refresh')
+            .set(<String, dynamic>{
+        'time': FieldValue.serverTimestamp(),
+        'userName': lastFixedHandle,});
+        apiRest = false;
+      }
+
+      getUnsolvedList();
+      notifyListeners();
+    }
+    // TODO: TO HERE.
 
     //this is get for user solved problem list
     FirebaseFirestore.instance
@@ -615,6 +645,22 @@ class RefreshTime {
   String? userName;
 
   RefreshTime({required this.time, this.userName});
+}
+
+class UserVerification {
+  String? handle ;
+  int? maxStreak ;
+  int? solvedCount ;
+  int? rank ;
+  int? reverseRivalCount;
+
+  UserVerification({this.handle, this.solvedCount, this.maxStreak});
+
+  UserVerification.fromJson(Map<String, dynamic> json) {
+    handle = json['handle'];
+    maxStreak = json['maxStreak'];
+    solvedCount = json['solvedCount'] ;
+  }
 }
 
 class UserSolved {
