@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id" translatable="false">231870076850-mhut750a5il7hqim52d5g646b474uht1.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">231870076850</string>
+    <string name="google_api_key" translatable="false">AIzaSyBEhByufFfCMlVH-P-0vZB4GXYgBNFokno</string>
+    <string name="google_app_id" translatable="false">1:231870076850:android:0072f9e1a2756c147876ab</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBEhByufFfCMlVH-P-0vZB4GXYgBNFokno</string>
+    <string name="google_storage_bucket" translatable="false">solved-handong.appspot.com</string>
+    <string name="project_id" translatable="false">solved-handong</string>
+</resources>
